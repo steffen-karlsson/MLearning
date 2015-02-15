@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from mpl_toolkits.mplot3d import Axes3D
-from numpy import pi, exp, sqrt, dot, multiply, insert
+from numpy import pi, exp, sqrt, dot, multiply, insert, arange
 from numpy import linspace, array, random, newaxis, var
 from numpy.linalg import cholesky, eigh, inv
 
@@ -18,7 +18,7 @@ def plot_gaussian_1d():
     mu_sigma = [(-1, 1), (0, 2), (2, 3)]
 
     for __gaussian in [gaussian(mu, sigma) for mu, sigma in mu_sigma]:
-        plt.plot(__gaussian)
+        plt.plot(linspace(-10, 10, 1000), __gaussian)
     plt.show()
 
 
@@ -103,7 +103,7 @@ def plot_sample_with_color(sample, c):
 sigma = array([[0.3, 0.2], [0.2, 0.2]])
 samples = gaussian_sample(N, MEAN, sigma)
 
-# plot_gaussian_1d()
+plot_gaussian_1d()
 # plot_gaussian_sample_2d(samples, MEAN)
 # plot_gaussian_sample_rotated(samples, MEAN)
 
@@ -203,7 +203,7 @@ train = load_data("IrisTrain2014.dt")
 # plot_train_test_data(train, test)
 # plot_train_test_data(new_test, None)
 # print str(1 - lost_function(test, new_test))
-# cross_validation(train, fold=5)
+#cross_validation(train, fold=5)
 
-updated_data = normalize(train)
-cross_validation(updated_data, fold=5)
+#updated_data = normalize(train)
+#cross_validation(updated_data, fold=5)
