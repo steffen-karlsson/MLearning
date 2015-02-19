@@ -24,35 +24,37 @@ def calculate_wml(design_matrix, t):
     return dot(pinv(design_matrix), t)
 
 
-def plot_linear_regression_2d(data, wml, target):
-    y = sum(data, [])
-    y1 = sum(target, [])
-    x = array(range(0, len(y)))
+def plot_linear_regression_2d(wml, expected_t, actual_t):
+    y = sum(actual_t, [])
+    x = expected_t.flatten()
     plt.scatter(x, y, c='b', marker='o')
-    plt.scatter(x[16:], y1, c='g', marker='x')
     plt.plot(x, eval('{0}+{1}*x'.format(wml[0][0], wml[1][0])), c='r')
     plt.show()
 
 
-def calculate_target_values(data):
+def calculate_expected_target(data):
     target = []
-    for inx in xrange(16, len(data)):
-        target.append([mean([data[inx - 16][i], data[inx - 8][i], data[inx - 4][i],
-                            data[inx - 2][i], data[inx - 1][i]]) for i in xrange(len(data[inx]))])
-    return target
+    for inx in xrange(0, len(data)):
+        target.append([mean(data[inx])])
+    return array(target)
 
 
-def rms(data, target, wml):
-    return sqrt(sum([(target[idx] - dot(array([1] + val), wml)) ** 2 for idx, val in enumerate(data)])) / len(data)
+def rms(data, actual_target, wml):
+    return sqrt(sum([(actual_target[idx][0] - y(val, wml)) ** 2 for idx, val in enumerate(data)]) / len(data))
+
+
+def y(x, w):
+    return (w[0] + dot(x, w[1:]))[0]
 
 
 # II.2.1
+actual_t = load_data("sunspotsTrainStatML.dt", [6])
 for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
     data = load_data("sunspotsTrainStatML.dt", columns)
-    target = calculate_target_values(data)
-    dm = design_matrix_linear_regression(data[16:])
-    wml = calculate_wml(dm, array(target))
-    print "RMS: " + str(rms(data[16:], target, wml))
+    expected_t = calculate_expected_target(data)
+    dm = design_matrix_linear_regression(data)
+    wml = calculate_wml(dm, array(expected_t))
+    print "RMS: " + str(rms(data, actual_t, wml))
     if idx == 1:
-        plot_linear_regression_2d(data, wml, target)
+        plot_linear_regression_2d(wml, expected_t, actual_t)
     print wml
