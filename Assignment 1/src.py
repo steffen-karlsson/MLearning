@@ -1,9 +1,8 @@
 import matplotlib.pyplot as plt
 
-from mpl_toolkits.mplot3d import Axes3D
-from numpy import pi, exp, sqrt, dot, multiply, insert, arange
+from numpy import pi, exp, sqrt, dot, multiply, insert, cross, degrees, arctan2
 from numpy import linspace, array, random, newaxis, var
-from numpy.linalg import cholesky, eigh, inv
+from numpy.linalg import cholesky, eigh, inv, norm
 
 from collections import Counter
 
@@ -51,7 +50,14 @@ def plot_gaussian_sample_2d(samples, mean):
                  textcoords="offset points", ha="left", va="bottom",
                  arrowprops=dict(arrowstyle="->", connectionstyle='arc3,rad=0'))
 
-    vals, vecs = eigh(ml_covariance(samples, mean))
+    cov_ml = ml_covariance(samples, mean)
+    print "Covariance matrix: " + str(cov_ml)
+    vals, vecs = eigh(cov_ml)
+
+    # Caluclating phi
+    phi = angle_between_vectors(array([-1, 0]), vecs[1])
+    print "Angle phi: " + str(phi)
+
     scaled_vecs = [mean + sqrt(vals[i]) * vecs[i, newaxis].T
                    for i in xrange(len(vecs))]
 
@@ -64,6 +70,12 @@ def plot_gaussian_sample_2d(samples, mean):
     plt.arrow(true_x, true_y, scaled_x[1] - true_x, scaled_y[1] - true_y, fc="y", ec="y")
 
     plt.show()
+
+
+def angle_between_vectors(v1, v2):
+    c = dot(v1, v2)
+    s = norm(cross(v1, v2))
+    return degrees(arctan2(s, c))
 
 
 def plot_gaussian_sample_rotated(samples, mean):
@@ -100,14 +112,6 @@ def plot_sample_with_color(sample, c):
     plt.scatter(x, y, color=c)
 
 
-sigma = array([[0.3, 0.2], [0.2, 0.2]])
-samples = gaussian_sample(N, MEAN, sigma)
-
-plot_gaussian_1d()
-# plot_gaussian_sample_2d(samples, MEAN)
-# plot_gaussian_sample_rotated(samples, MEAN)
-
-
 def load_data(data_file):
     data = []
     with open(data_file, mode="r+") as f:
@@ -117,22 +121,24 @@ def load_data(data_file):
     return data
 
 
-def plot_train_test_data(train, test):
-    for len, width, species in train:
-        if species == 0:
-            c = 'red'
-        elif species == 1:
-            c = 'blue'
+def plot_train_test_data(train, test, plot_edge=False):
+    def __get_species_color(s):
+        if s == 0:
+            return 'red'
+        elif s == 1:
+            return 'blue'
         else:
-            c = 'orange'
+            return 'orange'
 
-        plt.scatter(len, width, color=c)
+    for len, width, species in train:
+        plt.scatter(len, width, color=__get_species_color(species))
 
     if test is not None:
         for len, width, species in test:
-            plt.scatter(len, width, color='grey')
-
-    # plt.gca().set_aspect('equal')
+            if plot_edge:
+                plt.scatter(len, width, color='grey', edgecolors=__get_species_color(species))
+            else:
+                plt.scatter(len, width, color='grey')
     plt.show()
 
 
@@ -178,6 +184,9 @@ def cross_validation(train, fold):
     plt.plot(x, y)
     plt.show()
 
+    sorted_optimal = sorted(optimal_ks,key=lambda x: x[1])
+    return sorted_optimal[0][0]
+
 
 def normalize(data):
     lens, heights, species = zip(*data)
@@ -195,15 +204,42 @@ def normalize(data):
 
     return zip(lens, heights, species)
 
+# I.2.1
+plot_gaussian_1d()
+
+# I.2.2 + I.2.3
+sigma = array([[0.3, 0.2], [0.2, 0.2]])
+samples = gaussian_sample(N, MEAN, sigma)
+plot_gaussian_sample_2d(samples, MEAN)
+
+# I.2.4
+plot_gaussian_sample_rotated(samples, MEAN)
 
 test = load_data("IrisTest2014.dt")
 train = load_data("IrisTrain2014.dt")
 
-# new_test = nearest_neighbour(5, train, test)
-# plot_train_test_data(train, test)
-# plot_train_test_data(new_test, None)
-# print str(1 - lost_function(test, new_test))
-#cross_validation(train, fold=5)
+# Printing default data
+plot_train_test_data(train, test)
 
-#updated_data = normalize(train)
-#cross_validation(updated_data, fold=5)
+# I.3.1
+for k in xrange(1, 6, 2):
+    new_test = nearest_neighbour(k, train, test)
+    plot_train_test_data(train, new_test, plot_edge=True)
+    # print str(lost_function(test, new_test))
+
+# I.3.2
+optimal_k = cross_validation(train, fold=5)
+new_test = nearest_neighbour(optimal_k, train, test)
+plot_train_test_data(train, new_test, plot_edge=True)
+print str(lost_function(test, new_test))
+
+# I.3.3
+updated_data = normalize(train + test)
+
+updated_train = updated_data[:len(train)]
+updated_test = updated_data[len(train):]
+
+optimal_k = cross_validation(updated_train, fold=5)
+new_test = nearest_neighbour(optimal_k, updated_train, updated_test)
+plot_train_test_data(updated_train, new_test, plot_edge=True)
+print str(lost_function(test, new_test))
