@@ -38,11 +38,12 @@ def plot_linear_regression_2d(train_data, train_actual, test_data, test_actual, 
     plt.show()
 
 
-def rms(data, t, w):
-    def __y(_data, _w):
-        return dot(_w.T, array([1] + _data))
+def y(data, w):
+    return dot(w.T, array([1] + data))
 
-    return sqrt(sum((t[i] - __y(d, w))**2 for i, d in enumerate(data)) / len(data))
+
+def rms(data, t, w):
+    return sqrt(sum((t[i] - y(d, w))**2 for i, d in enumerate(data)) / len(data))
 
 
 def MAP(dm, t, alpha, beta=1):
@@ -162,33 +163,53 @@ def normalize(data):
 train_actual_t = load_data("sunspotsTrainStatML.dt", [6])
 test_actual_t = load_data("sunspotsTestStatML.dt", [6])
 
+# for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
+#     train_data = load_data("sunspotsTrainStatML.dt", columns)
+#     dm = design_matrix_linear_regression(train_data)
+#     wml = calculate_wml(dm, array(train_actual_t))
+#     test_data = load_data("sunspotsTestStatML.dt", columns)
+#
+#     print "RMS: " + str(rms(test_data, test_actual_t, wml))
+#     if idx == 1:
+#         plot_linear_regression_2d(train_data, train_actual_t, test_data, test_actual_t, wml)
+#     print wml
+
+xs = linspace(1916, 2011, 2011-1915)
 for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
     train_data = load_data("sunspotsTrainStatML.dt", columns)
     dm = design_matrix_linear_regression(train_data)
     wml = calculate_wml(dm, array(train_actual_t))
     test_data = load_data("sunspotsTestStatML.dt", columns)
 
-    print "RMS: " + str(rms(test_data, test_actual_t, wml))
-    if idx == 1:
-        plot_linear_regression_2d(train_data, train_actual_t, test_data, test_actual_t, wml)
-    print wml
+    if idx == 0:
+        color = 'r'
+    elif idx == 1:
+        color = 'b'
+    else:
+        color = 'g'
 
+    plt.plot(xs, array([y(d, wml) for d in test_data]), c=color)
+
+test_actual_t = array(test_actual_t).flatten()
+plt.plot(xs, test_actual_t, c='k')
+plt.gca().set_xlim([1916, 2011])
+plt.show()
 
 # II.2.2
-for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
-    train_data = load_data("sunspotsTrainStatML.dt", columns)
-    test_data = load_data("sunspotsTestStatML.dt", columns)
-    dm = design_matrix_linear_regression(train_data)
-
-    rmss = []
-    alphas = linspace(0, 5000, 2000)
-    for alpha in alphas:
-        pm = MAP(dm, train_actual_t, alpha)
-        rmss.append(rms(test_data, test_actual_t, pm))
-
-    optimal_alpha = alphas[rmss.index(min(rmss))]
-    print "Optimal Alpha: " + str(optimal_alpha)
-    print "RMS: " + str(min(rmss))
-    plt.plot(alphas, rmss, c='b')
-    plt.axis([0, 5000, 10, 60])
-    plt.show()
+# for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
+#     train_data = load_data("sunspotsTrainStatML.dt", columns)
+#     test_data = load_data("sunspotsTestStatML.dt", columns)
+#     dm = design_matrix_linear_regression(train_data)
+#
+#     rmss = []
+#     alphas = linspace(0, 5000, 2000)
+#     for alpha in alphas:
+#         pm = MAP(dm, train_actual_t, alpha)
+#         rmss.append(rms(test_data, test_actual_t, pm))
+#
+#     optimal_alpha = alphas[rmss.index(min(rmss))]
+#     print "Optimal Alpha: " + str(optimal_alpha)
+#     print "RMS: " + str(min(rmss))
+#     plt.plot(alphas, rmss, c='b')
+#     plt.axis([0, 5000, 10, 60])
+#     plt.show()
