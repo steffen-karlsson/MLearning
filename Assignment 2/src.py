@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
+from pylab import legend, rcParams
 
 from numpy import array, vstack, mean, dot, sqrt, where, loadtxt, cov, add, log
 from numpy import identity, transpose, linspace, concatenate
 from numpy.linalg import pinv, inv
 
 BETA = 1
+rcParams['legend.loc'] = 'best'
 
 
 def load_data(data_file, columns):
@@ -188,11 +190,12 @@ for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
     else:
         color = 'g'
 
-    plt.plot(xs, array([y(d, wml) for d in test_data]), c=color)
+    plt.plot(xs, array([y(d, wml) for d in test_data]), label="Section {0}".format(idx + 1), c=color)
 
 test_actual_t = array(test_actual_t).flatten()
-plt.plot(xs, test_actual_t, c='k')
+plt.plot(xs, test_actual_t, c='k', label="True data")
 plt.gca().set_xlim([1916, 2011])
+legend(framealpha=0.5)
 plt.show()
 
 # II.2.2
