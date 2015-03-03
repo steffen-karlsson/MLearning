@@ -119,37 +119,43 @@ def normalize(data):
     return array([array([lens[i], heights[i], species[i]]) for i in xrange(len(species))])
 
 
+#test = loadtxt("IrisTest2014.dt")
+#train = loadtxt("IrisTrain2014.dt")
+
 # II.1.1
-test = loadtxt("IrisTest2014.dt")
-train = loadtxt("IrisTrain2014.dt")
-
-all_species = split_into_species(train)
-new_train = train.copy()
-for data in new_train:
-    data[2] = best_category(data[0:2], all_species)
-plot_train_test_data(train, new_train, plot_edge=True)
-print str(lost_function(train, new_train))
-
-
-new_test = test.copy()
-for data in new_test:
-    data[2] = best_category(data[0:2], all_species)
-plot_train_test_data(train, new_test, plot_edge=True)
-print str(lost_function(test, new_test))
+# all_species = split_into_species(train)
+# new_train = train.copy()
+# for data in new_train:
+#     data[2] = best_category(data[0:2], all_species)
+# plot_train_test_data(train, new_train, plot_edge=True)
+# print str(lost_function(train, new_train))
+#
+#
+# new_test = test.copy()
+# for data in new_test:
+#     data[2] = best_category(data[0:2], all_species)
+# plot_train_test_data(train, new_test, plot_edge=True)
+# print str(lost_function(test, new_test))
 
 
 # II.1.2
-normalized_data = normalize(concatenate((train, test)))
-normalized_train = normalized_data[:len(train)]
-normalized_test = normalized_data[len(train):]
-
-normalized_all_species = split_into_species(normalized_train)
-new_test = normalized_test.copy()
-
-for data in new_test:
-    data[2] = best_category(data[0:2], normalized_all_species)
-plot_train_test_data(normalized_train, new_test, plot_edge=True)
-print str(lost_function(normalized_test, new_test))
+# normalized_data = normalize(concatenate((train, test)))
+# normalized_train = normalized_data[:len(train)]
+# normalized_test = normalized_data[len(train):]
+#
+# normalized_all_species = split_into_species(normalized_train)
+# new_test = normalized_test.copy()
+#
+# new_train = normalized_train.copy()
+# for data in new_train:
+#     data[2] = best_category(data[0:2], normalized_all_species)
+# plot_train_test_data(normalized_train, new_train, plot_edge=True)
+# print str(lost_function(normalized_train, new_train))
+#
+# for data in new_test:
+#     data[2] = best_category(data[0:2], normalized_all_species)
+# plot_train_test_data(normalized_train, new_test, plot_edge=True)
+# print str(lost_function(normalized_test, new_test))
 
 
 # II.2.1
