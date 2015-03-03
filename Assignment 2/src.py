@@ -122,59 +122,59 @@ def normalize(data):
     return array([array([lens[i], heights[i], species[i]]) for i in xrange(len(species))])
 
 
-#test = loadtxt("IrisTest2014.dt")
-#train = loadtxt("IrisTrain2014.dt")
+test = loadtxt("IrisTest2014.dt")
+train = loadtxt("IrisTrain2014.dt")
 
 # II.1.1
-# all_species = split_into_species(train)
-# new_train = train.copy()
-# for data in new_train:
-#     data[2] = best_category(data[0:2], all_species)
-# plot_train_test_data(train, new_train, plot_edge=True)
-# print str(lost_function(train, new_train))
-#
-#
-# new_test = test.copy()
-# for data in new_test:
-#     data[2] = best_category(data[0:2], all_species)
-# plot_train_test_data(train, new_test, plot_edge=True)
-# print str(lost_function(test, new_test))
+all_species = split_into_species(train)
+new_train = train.copy()
+for data in new_train:
+    data[2] = best_category(data[0:2], all_species)
+plot_train_test_data(train, new_train, plot_edge=True)
+print str(lost_function(train, new_train))
+
+
+new_test = test.copy()
+for data in new_test:
+    data[2] = best_category(data[0:2], all_species)
+plot_train_test_data(train, new_test, plot_edge=True)
+print str(lost_function(test, new_test))
 
 
 # II.1.2
-# normalized_data = normalize(concatenate((train, test)))
-# normalized_train = normalized_data[:len(train)]
-# normalized_test = normalized_data[len(train):]
-#
-# normalized_all_species = split_into_species(normalized_train)
-# new_test = normalized_test.copy()
-#
-# new_train = normalized_train.copy()
-# for data in new_train:
-#     data[2] = best_category(data[0:2], normalized_all_species)
-# plot_train_test_data(normalized_train, new_train, plot_edge=True)
-# print str(lost_function(normalized_train, new_train))
-#
-# for data in new_test:
-#     data[2] = best_category(data[0:2], normalized_all_species)
-# plot_train_test_data(normalized_train, new_test, plot_edge=True)
-# print str(lost_function(normalized_test, new_test))
+normalized_data = normalize(concatenate((train, test)))
+normalized_train = normalized_data[:len(train)]
+normalized_test = normalized_data[len(train):]
+
+normalized_all_species = split_into_species(normalized_train)
+new_test = normalized_test.copy()
+
+new_train = normalized_train.copy()
+for data in new_train:
+    data[2] = best_category(data[0:2], normalized_all_species)
+plot_train_test_data(normalized_train, new_train, plot_edge=True)
+print "Lost: " + str(lost_function(normalized_train, new_train))
+
+for data in new_test:
+    data[2] = best_category(data[0:2], normalized_all_species)
+plot_train_test_data(normalized_train, new_test, plot_edge=True)
+print "Lost: " + str(lost_function(normalized_test, new_test))
 
 
 # II.2.1
 train_actual_t = load_data("sunspotsTrainStatML.dt", [6])
 test_actual_t = load_data("sunspotsTestStatML.dt", [6])
 
-# for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
-#     train_data = load_data("sunspotsTrainStatML.dt", columns)
-#     dm = design_matrix_linear_regression(train_data)
-#     wml = calculate_wml(dm, array(train_actual_t))
-#     test_data = load_data("sunspotsTestStatML.dt", columns)
-#
-#     print "RMS: " + str(rms(test_data, test_actual_t, wml))
-#     if idx == 1:
-#         plot_linear_regression_2d(train_data, train_actual_t, test_data, test_actual_t, wml)
-#     print wml
+for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
+    train_data = load_data("sunspotsTrainStatML.dt", columns)
+    dm = design_matrix_linear_regression(train_data)
+    wml = calculate_wml(dm, array(train_actual_t))
+    test_data = load_data("sunspotsTestStatML.dt", columns)
+
+    print "RMS: " + str(rms(test_data, test_actual_t, wml))
+    if idx == 1:
+        plot_linear_regression_2d(train_data, train_actual_t, test_data, test_actual_t, wml)
+    print wml
 
 xs = linspace(1916, 2011, 2011-1915)
 for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
@@ -199,20 +199,20 @@ legend(framealpha=0.5)
 plt.show()
 
 # II.2.2
-# for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
-#     train_data = load_data("sunspotsTrainStatML.dt", columns)
-#     test_data = load_data("sunspotsTestStatML.dt", columns)
-#     dm = design_matrix_linear_regression(train_data)
-#
-#     rmss = []
-#     alphas = linspace(0, 5000, 2000)
-#     for alpha in alphas:
-#         pm = MAP(dm, train_actual_t, alpha)
-#         rmss.append(rms(test_data, test_actual_t, pm))
-#
-#     optimal_alpha = alphas[rmss.index(min(rmss))]
-#     print "Optimal Alpha: " + str(optimal_alpha)
-#     print "RMS: " + str(min(rmss))
-#     plt.plot(alphas, rmss, c='b')
-#     plt.axis([0, 5000, 10, 60])
-#     plt.show()
+for idx, columns in enumerate([[3, 4], [5], range(1, 6)]):
+    train_data = load_data("sunspotsTrainStatML.dt", columns)
+    test_data = load_data("sunspotsTestStatML.dt", columns)
+    dm = design_matrix_linear_regression(train_data)
+
+    rmss = []
+    alphas = linspace(0, 5000, 2000)
+    for alpha in alphas:
+        pm = MAP(dm, train_actual_t, alpha)
+        rmss.append(rms(test_data, test_actual_t, pm))
+
+    optimal_alpha = alphas[rmss.index(min(rmss))]
+    print "Optimal Alpha: " + str(optimal_alpha)
+    print "RMS: " + str(min(rmss))
+    plt.plot(alphas, rmss, c='b')
+    plt.axis([0, 5000, 10, 60])
+    plt.show()
