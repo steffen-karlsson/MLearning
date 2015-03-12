@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 
-from numpy import loadtxt, array, append, sqrt, inf, arange, sin, round, average
+from numpy import loadtxt, array, append, sqrt, inf, arange, sin, round, average, subtract, dot, add, newaxis
 from numpy.random import rand, seed
 
 pTest = loadtxt("data/parkinsonsTestStatML.dt")
@@ -16,7 +16,7 @@ def input_unit(a):
 
 
 def output_unit(hidden_data, weight, bias):
-    return weighed_sum([bias] + hidden_data, weight)
+    return dot(weight, [bias] + hidden_data)
 
 
 def alt_sigmoid(a):
@@ -56,78 +56,59 @@ def MSE(data, t):
     return sum((t[i] - data[i])**2 for i, d in enumerate(data)) / len(data)
 
 
-def delta_out(target, estimat):
-    return estimat - target
-
-
-def delta_hidden(zj, delta_k, weight):
-    return (1 - zj**2) * sum([weight * data_k for k, data_k in enumerate(delta_k)])
-
-
 def weighed_sum(data, weight):
     return sum([datai * weight[i] for i, datai in enumerate(data)])
 
 
+def delta_k(estimated, target):
+    return estimated - target
+
+
+def delta_j(aj, weight, delta_k):
+    return alt_sigmoid_prime(aj) * sum([weight * data_k for k, data_k in enumerate(delta_k)])
+
+
 def back_prop(steps, learning_rate, weights_md, weights_km):
     errors = []
-    prev_error = inf
-    current_error = inf
-    validation_errors = []
-    interval_errors = []
 
     for _ in xrange(steps):
-        delta = prev_error - current_error
-        if 0.00001 > delta >= 0:
-            break
-
         estimated = nn(sTrainData, weights_md, weights_km, num_hidden)
-        estimated_validation = nn(sValidateData, weights_md, weights_km, num_hidden)
         estimated_interval = nn(trainInterval, weights_md, weights_km, num_hidden)
 
         dhiddens = []
         douts = []
         for i, data in enumerate(sTrainData):
-            delta_k = delta_out(data, estimated[i])
+            dK = delta_k(data, estimated[i])
 
-            delta_js = array([])
+            dJs = []
             list_zj = []
-            for j in xrange(num_hidden + 1):
-                zj = alt_sigmoid_prime(weights_md[j][0] * bias_unit() + weights_md[j][1] * data)
-                list_zj.append(array([zj]))
-                delta_js = append(delta_js, delta_hidden(zj, [delta_k], weights_km[j]))
+            for j in xrange(num_hidden):
+                aj = array([weights_md[j][0] * bias_unit() + weights_md[j][1] * data])
+                list_zj.append(alt_sigmoid(aj))
+                dJs.append(delta_j(aj, weights_km[0][j], [dK]))
 
-            dhiddens.append((delta_js * array([[bias_unit()], [data]])).T)
-            douts.append(delta_k * array(list_zj))
+            dhiddens.append(dot(array(dJs), array([[bias_unit(), data]])))
+            douts.append(dK * array([alt_sigmoid(1)] + list_zj))
 
-        prev_error = current_error
-        # print "PREVIOUS: " + str(prev_error)
-        current_error = round(MSE(estimated, sTrainTarget), 3)
-        # print "CURRENT: " + str(current_error) + "\n\n"
+        weights_md = subtract(weights_md, (learning_rate * average(dhiddens, axis=0)))
+        weights_km = subtract(weights_km, (learning_rate * average(douts, axis=0)[newaxis]))
 
-        weights_md = weights_md - (learning_rate * average(dhiddens, axis=0))
-        weights_km = weights_km - (learning_rate * average(douts, axis=0))
-
-        validation_errors.append(MSE(estimated_validation, sValidateTarget))
-        interval_errors.append(MSE(estimated_interval,
-                                   eval('sin(trainInterval)/trainInterval'.format(trainInterval))))
-        errors.append(current_error)
-    return errors, validation_errors, interval_errors, estimated_interval
+        errors.append(round(MSE(estimated, sTrainTarget), 3))
+    return errors, estimated_interval
 
 
 num_hidden = 20
 
-weights_md = rand(num_hidden + 1, 2) - 0.5
-weights_km = rand(num_hidden + 1, 1) - 0.5
+weights_md = rand(num_hidden, 2) - 0.5
+weights_km = rand(1, num_hidden + 1) - 0.5
 
 trainInterval = arange(-10, 10, 0.05, dtype='float64')
-errors, validation_errors, interval_errors, data = back_prop(100, 0.001, weights_md, weights_km)
+errors, data = back_prop(10, 0.1, weights_md, weights_km)
 # data = nn(trainInterval, wMD, wKM, num_hidden)
 
 print MSE(data, eval('sin(trainInterval)/trainInterval'.format(trainInterval)))
 
-plt.plot(range(len(interval_errors)), interval_errors)
 plt.plot(range(len(errors)), errors)
-plt.plot(range(len(validation_errors)), validation_errors)
 plt.show()
 
 plt.plot(trainInterval, data)
