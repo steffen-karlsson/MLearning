@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 
 from numpy import loadtxt, array, append, sqrt, inf, arange, sin, round, average, subtract, dot, add, newaxis
-from numpy.random import rand, seed
+from numpy.random import rand, seed, sample
 
 pTest = loadtxt("data/parkinsonsTestStatML.dt")
 pTrain = loadtxt("data/parkinsonsTrainStatML.dt")
@@ -10,25 +10,26 @@ sTrainTarget = loadtxt("data/sincTrain25.dt", usecols=(1, ))
 sValidateData = loadtxt("data/sincValidate10.dt", usecols=(0, ))
 sValidateTarget = loadtxt("data/sincValidate10.dt", usecols=(1, ))
 
+seed(10)
 
 def input_unit(a):
     return a
 
 
 def output_unit(hidden_data, weight, bias):
-    return dot(weight, [bias] + hidden_data)
+    return dot(weight, hidden_data + [bias])
 
 
 def alt_sigmoid(a):
-    return a / (1 + abs(a))
+    return a / float(1 + abs(a))
 
 
 def alt_sigmoid_prime(a):
-    return 1 / ((1 + abs(a))**2)
+    return 1 / float((1 + abs(a)))**2
 
 
 def hidden_unit(data, bias, weight):
-    return alt_sigmoid(weight[0] * bias + weight[1] * data)
+    return alt_sigmoid(weight[0] * data + weight[1] * bias)
 
 
 def bias_unit():
@@ -78,35 +79,37 @@ def back_prop(steps, learning_rate, weights_md, weights_km):
         dhiddens = []
         douts = []
         for i, data in enumerate(sTrainData):
-            dK = delta_k(data, estimated[i])
+            dK = delta_k(estimated[i], sTrainTarget[i])
 
             dJs = []
             list_zj = []
             for j in xrange(num_hidden):
-                aj = array([weights_md[j][0] * bias_unit() + weights_md[j][1] * data])
+                aj = weights_md[j][0] * data + weights_md[j][1] * bias_unit()
                 list_zj.append(alt_sigmoid(aj))
                 dJs.append(delta_j(aj, weights_km[0][j], [dK]))
 
-            dhiddens.append(dot(array(dJs), array([[bias_unit(), data]])))
-            douts.append(dK * array([alt_sigmoid(1)] + list_zj))
+            dhiddens.append(dot(array(dJs), array([[data, bias_unit()]])))
+            list_zj.append(array([alt_sigmoid(1)]))
+            douts.append(dK * array(list_zj))
 
         weights_md = subtract(weights_md, (learning_rate * average(dhiddens, axis=0)))
-        weights_km = subtract(weights_km, (learning_rate * average(douts, axis=0)[newaxis]))
+        weights_km = subtract(weights_km, [list(average(douts, axis=0).flatten())])
 
-        errors.append(round(MSE(estimated, sTrainTarget), 3))
+        errors.append(MSE(estimated, sTrainTarget))
     return errors, estimated_interval
 
 
-num_hidden = 20
-
-weights_md = rand(num_hidden, 2) - 0.5
-weights_km = rand(1, num_hidden + 1) - 0.5
+num_hidden = 5
+weights_md = sample([num_hidden, 2])
+weights_km = sample([1, num_hidden + 1])
 
 trainInterval = arange(-10, 10, 0.05, dtype='float64')
-errors, data = back_prop(10, 0.1, weights_md, weights_km)
+errors, data = back_prop(10000, 0.1, weights_md, weights_km)
 # data = nn(trainInterval, wMD, wKM, num_hidden)
 
 print MSE(data, eval('sin(trainInterval)/trainInterval'.format(trainInterval)))
+
+plt.gca().set_yscale('log')
 
 plt.plot(range(len(errors)), errors)
 plt.show()
@@ -116,4 +119,3 @@ plt.plot(trainInterval, eval('sin(trainInterval)/trainInterval'.format(trainInte
 plt.scatter(sTrainData, sTrainTarget)
 plt.show()
 
-# plt.gca().set_yscale('log')
