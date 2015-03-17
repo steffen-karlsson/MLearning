@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 
+from numpy import sum as npsum
 from numpy import loadtxt, array, sqrt, sin, average, zeros
 from numpy import subtract, dot, add, mean, var, arange
 from numpy.random import rand, seed, sample
@@ -70,7 +71,7 @@ def plot(data, target, estimated):
 
 
 def MSE(data, t):
-    return sum((t[i] - data[i])**2 for i, d in enumerate(data)) / len(data)
+    return (1 / (2*len(data))) * sum((t[i] - data[i])**2 for i, d in enumerate(data))
 
 
 def weighed_sum(data, weight):
@@ -161,7 +162,7 @@ def svm_classify(svr, data):
     return svr.predict(data)
 
 
-def gradient_verify(data, data_target, weight_km, weight_md, e):
+def gradient_verify(data, data_target, weights_km, weights_md, e):
     error_matrix_md = zeros(weights_md.shape)
     error_matrix_km = zeros(weights_km.shape)
 
@@ -177,7 +178,7 @@ def gradient_verify(data, data_target, weight_km, weight_md, e):
     for i in xrange(len(weights_km)):
         cpy_weight_km = copy(weights_km)
         cpy_weight_km[i] += e
-        e_errors, _, _, _ = back_prop(data, data_target, 1, -1, weight_md, cpy_weight_km)
+        e_errors, _, _, _ = back_prop(data, data_target, 1, -1, weights_md, cpy_weight_km)
         error_matrix_km[i] = (e_errors[0][0] - errors[0][0]) / e
     return error_matrix_md, error_matrix_km
 
