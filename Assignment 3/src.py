@@ -1,6 +1,5 @@
 import matplotlib.pyplot as plt
 
-from numpy import sum as npsum
 from numpy import loadtxt, array, sqrt, sin, average, zeros
 from numpy import subtract, dot, add, mean, var, arange
 from numpy.random import rand, seed, sample
@@ -22,11 +21,7 @@ sValidateTarget = loadtxt("data/sincValidate10.dt", usecols=(1, ))
 
 seed(10)
 
-num_hidden = 2
-weights_md = sample([num_hidden, 2])
-weights_km = sample([1, num_hidden + 1])
 trainInterval = arange(-10, 10, 0.05, dtype='float64')
-learning_rates = [0.0001, 0.001, 0.01, 0.1, 1, 10, 100]
 
 
 def input_unit(a):
@@ -42,7 +37,7 @@ def alt_sigmoid(a):
 
 
 def alt_sigmoid_prime(a):
-    return 1 / float((1 + abs(a)))**2
+    return 1 / float((1 + abs(a))) ** 2
 
 
 def hidden_unit(data, bias, weight):
@@ -71,7 +66,7 @@ def plot(data, target, estimated):
 
 
 def MSE(data, t):
-    return (1 / float(2*len(data))) * sum((t[i] - data[i])**2 for i, d in enumerate(data))
+    return (1 / float(2 * len(data))) * sum((t[i] - data[i]) ** 2 for i, d in enumerate(data))
 
 
 def weighed_sum(data, weight):
@@ -123,8 +118,8 @@ def standardization(data, features=None):
     new_features = []
     data = zip(*data)
 
-    # print "Mean (Data): " + str(mean(data, axis=1))
-    # print "Variance (Data): " + str(var(data, axis=1))
+    print "Mean (Data): " + str(mean(data, axis=1))
+    print "Variance (Data): " + str(var(data, axis=1))
 
     for idx, d in enumerate(data):
         if features:
@@ -137,8 +132,8 @@ def standardization(data, features=None):
         updated_data.append(array([(entry - d_mean) / d_var for entry in d]))
 
     updated_data = array(updated_data)
-    # print "Mean (Norm data): " + str(mean(updated_data, axis=1))
-    # print "Variance (Norm data): " + str(var(updated_data, axis=1))
+    print "Mean (Norm data): " + str(mean(updated_data, axis=1))
+    print "Variance (Norm data): " + str(var(updated_data, axis=1))
 
     return updated_data.T, new_features
 
@@ -174,11 +169,11 @@ def gradient_verify(data, data_target, weights_km, weights_md, e):
             e_errors, _, _, _ = back_prop(data, data_target, 1, -1, cpy_weight_md, weights_km)
             error_matrix_md[j][i] = (e_errors[0][0] - errors[0][0]) / e
 
-    for i in xrange(len(weights_km)):
+    for i in xrange(weights_km.shape[1]):
         cpy_weight_km = copy(weights_km)
-        cpy_weight_km[i] += e
+        cpy_weight_km[0][i] += e
         e_errors, _, _, _ = back_prop(data, data_target, 1, -1, weights_md, cpy_weight_km)
-        error_matrix_km[i] = (e_errors[0][0] - errors[0][0]) / e
+        error_matrix_km[0][i] = (e_errors[0][0] - errors[0][0]) / e
     return error_matrix_md, error_matrix_km
 
 
@@ -215,39 +210,41 @@ def one_loss_svm_classification(train_data, train_target,
     svm(train_data, train_target, 15, y_best, v=2)
 
 
-## III.1
+for num_hidden, learning_rates in [(2, [0.0001, 0.001, 0.01, 0.1, 1]), (20, [0.0001, 0.001, 0.01, 0.1])]:
+    weights_md = sample([num_hidden, 2])
+    weights_km = sample([1, num_hidden + 1])
 
-error_matrix_md, error_matrix_km = gradient_verify(sTrainData[:10], sTrainTarget[:10], weights_km, weights_md, 0.0000000000001)
-_, _, avg_dhidden, avg_dout = back_prop(sTrainData[:10], sTrainTarget[:10], 1, -1, weights_md, weights_km)
+    error_matrix_md, error_matrix_km = gradient_verify(sTrainData[:10], sTrainTarget[:10], weights_km, weights_md,
+                                                       0.00000001)
+    _, _, avg_dhidden, avg_dout = back_prop(sTrainData[:10], sTrainTarget[:10], 1, -1, weights_md, weights_km)
 
-print subtract(error_matrix_md, avg_dhidden)
-print subtract(error_matrix_km, avg_dout)
+    print subtract(error_matrix_md, avg_dhidden)
+    print subtract(error_matrix_km, avg_dout)
 
-errors_list = []
-data_list = []
+    errors_list = []
+    data_list = []
 
-for learning_rate in learning_rates:
-    errors, data, _, _ = back_prop(sTrainData, sTrainTarget,
-                                   10000, learning_rate, weights_md, weights_km)
-    errors_list.append(errors)
-    data_list.append(data)
+    for learning_rate in learning_rates:
+        errors, data, _, _ = back_prop(sTrainData, sTrainTarget,
+                                       100, learning_rate, weights_md, weights_km)
+        errors_list.append(errors)
+        data_list.append(data)
 
-plt.gca().set_yscale('log')
+    plt.gca().set_yscale('log')
 
-for index, err in enumerate(errors_list):
-    plt.plot(range(len(err)), err, label="Learning rate " + str(learning_rates[index]))
-plt.legend()
-plt.show()
+    for index, err in enumerate(errors_list):
+        plt.plot(range(len(err)), err, label="Learning rate " + str(learning_rates[index]))
+    plt.legend()
+    plt.show()
 
-for index, da in enumerate(data_list):
-    plt.plot(trainInterval, da, label="Learning rate " + str(learning_rates[index]))
-plt.plot(trainInterval, eval('sin(trainInterval)/trainInterval'.format(trainInterval)), label="sin(x)/x")
-plt.scatter(sTrainData, sTrainTarget)
-plt.legend()
-plt.show()
+    for index, da in enumerate(data_list):
+        plt.plot(trainInterval, da, label="Learning rate " + str(learning_rates[index]))
+    plt.plot(trainInterval, eval('sin(trainInterval)/trainInterval'.format(trainInterval)), label="sin(x)/x")
+    plt.scatter(sTrainData, sTrainTarget)
+    plt.legend()
+    plt.show()
 
 
-## III.2.1
 print "Data:"
 norm_pTrainData, features = standardization(pTrainData)
 one_loss_svm_classification(pTrainData, pTrainTarget,
