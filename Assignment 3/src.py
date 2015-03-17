@@ -71,7 +71,7 @@ def plot(data, target, estimated):
 
 
 def MSE(data, t):
-    return (1 / (2*len(data))) * sum((t[i] - data[i])**2 for i, d in enumerate(data))
+    return (1 / float(2*len(data))) * sum((t[i] - data[i])**2 for i, d in enumerate(data))
 
 
 def weighed_sum(data, weight):
@@ -110,9 +110,9 @@ def back_prop(train, target, steps, learning_rate, weights_md, weights_km):
             douts.append(dK * array(list_zj))
 
         avg_dhidden = average(dhiddens, axis=0)
-        avg_dout = [list(average(douts, axis=0).flatten())]
+        avg_dout = average(douts, axis=0).flatten()
         weights_md = subtract(weights_md, (learning_rate * avg_dhidden))
-        weights_km = subtract(weights_km, avg_dout)
+        weights_km = subtract(weights_km, (learning_rate * avg_dout))
 
         errors.append(MSE(estimated, target))
     return errors, estimated_interval, avg_dhidden, avg_dout
@@ -152,8 +152,8 @@ def estimate_svm_params(data, target, c_range, y_range):
     return best_params['C'], best_params['gamma']
 
 
-def svm(data, target, c, y):
-    svr = SVC(kernel='rbf', C=c, gamma=y)
+def svm(data, target, c, y, v=False):
+    svr = SVC(kernel='rbf', C=c, gamma=y, verbose=v)
     svr.fit(data, target)
     return svr
 
@@ -165,7 +165,6 @@ def svm_classify(svr, data):
 def gradient_verify(data, data_target, weights_km, weights_md, e):
     error_matrix_md = zeros(weights_md.shape)
     error_matrix_km = zeros(weights_km.shape)
-
     errors, _, _, _ = back_prop(data, data_target, 1, -1, weights_md, weights_km)
 
     for i in xrange(weights_md.shape[1]):
@@ -173,7 +172,7 @@ def gradient_verify(data, data_target, weights_km, weights_md, e):
             cpy_weight_md = copy(weights_md)
             cpy_weight_md[j][i] += e
             e_errors, _, _, _ = back_prop(data, data_target, 1, -1, cpy_weight_md, weights_km)
-            error_matrix_md[i][j] = (e_errors[0][0] - errors[0][0]) / e
+            error_matrix_md[j][i] = (e_errors[0][0] - errors[0][0]) / e
 
     for i in xrange(len(weights_km)):
         cpy_weight_km = copy(weights_km)
@@ -205,6 +204,16 @@ def one_loss_svm_classification(train_data, train_target,
 
     _classification = svm_classify(_svm, test_data)
     print "Loss function for test data: " + str(lost_function(test_target, _classification))
+
+    print "Show bounded and free variables for optimal C:"
+    svm(train_data, train_target, c_best, y_best, v=2)
+
+    print "Show bounded and free variables for C=5:"
+    svm(train_data, train_target, 5, y_best, v=2)
+
+    print "Show bounded and free variables for C=15:"
+    svm(train_data, train_target, 15, y_best, v=2)
+
 
 ## III.1
 
